@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1186,13 +1187,16 @@ body::before {
 
 .menu-fab:hover { background: var(--v); color: white; border-color: var(--v); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,156,249,0.3); }
 .menu-fab:active { transform: scale(0.9); }
+
+.mpill{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+.mpill.active{background:var(--yellow);border-color:var(--yellow);color:#000;}
+#month-pills-wrap::-webkit-scrollbar{display:none;}
 </style>
 </head>
 <body>
 
 <!-- ══════════════════════ HOME ══════════════════════ -->
 <div class="screen active" id="s-home">
-  <div id="s-home">
     <div class="home-hero">
       <div class="hero-badge">SDR Tracker</div>
       <div class="hero-title">São João<br>de Meriti</div>
@@ -1261,7 +1265,7 @@ body::before {
       </div>
 
       <div class="sec-lbl" style="margin-top:20px;">Gestão</div>
-      <div class="profile-card dash-card" onclick="goTo('s-pin')">
+      <div class="profile-card dash-card" onclick="goTo('s-pin','back')">
         <div class="avatar" style="background:rgba(255,208,96,0.1);color:var(--yellow);">⟁</div>
         <div class="profile-info">
           <div class="profile-name">Dashboard</div>
@@ -1272,13 +1276,12 @@ body::before {
     </div>
 
     <div class="footer-sig">Criado e monitorado por Douglas Felipe</div>
-  </div>
 </div>
 
 <!-- ══════════════════════ PIN ══════════════════════ -->
 <div class="screen" id="s-pin">
   <div class="back-header">
-    <button class="back-btn" onclick="goTo('s-home');resetPin()">‹</button>
+    <button class="back-btn" onclick="goTo('s-home','back');resetPin()">‹</button>
     <span class="back-title">Acesso restrito</span>
   </div>
   <div class="pin-screen-inner">
@@ -1312,7 +1315,7 @@ body::before {
 <!-- ══════════════════════ CONFIG ══════════════════════ -->
 <div class="screen" id="s-config">
   <div class="back-header">
-    <button class="back-btn" onclick="goTo('s-pin')">‹</button>
+    <button class="back-btn" onclick="goTo('s-pin','back')">‹</button>
     <span class="back-title">Configurações Firebase</span>
   </div>
   <div class="config-inner">
@@ -1334,7 +1337,7 @@ body::before {
 <!-- ══════════════════════ SDR SCREEN ══════════════════════ -->
 <div class="screen" id="s-sdr">
   <div class="back-header">
-    <button class="back-btn" onclick="goTo('s-home')">‹</button>
+    <button class="back-btn" onclick="goTo('s-home','back')">‹</button>
   </div>
   <div class="sdr-content">
     <div class="sdr-hero">
@@ -1369,7 +1372,7 @@ body::before {
 <!-- ══════════════════════ EDIT DAY ══════════════════════ -->
 <div class="screen" id="s-edit">
   <div class="back-header">
-    <button class="back-btn" onclick="goTo('s-sdr');tab('hist')">‹</button>
+    <button class="back-btn" onclick="goTo('s-sdr','back');tab('hist')">‹</button>
     <span class="back-title" id="edit-title"></span>
   </div>
   <div class="edit-inner">
@@ -1384,11 +1387,12 @@ body::before {
 <!-- ══════════════════════ DASHBOARD ══════════════════════ -->
 <div class="screen" id="s-dash">
   <div class="back-header">
-    <button class="back-btn" onclick="goTo('s-home')">‹</button>
+    <button class="back-btn" onclick="goTo('s-home','back')">‹</button>
     <span class="back-title">Dashboard · SJM</span>
     <div style="flex:1;"></div>
     <span style="font-size:11px;color:var(--muted);">Douglas Felipe</span>
   </div>
+  <div id="month-pills-wrap" style="display:flex;gap:6px;overflow-x:auto;padding:10px 16px 2px;scrollbar-width:none;"></div>
   <div class="dash-inner">
     <div class="tabs">
       <button class="tab-btn" id="td-hoje" onclick="dtab('hoje')">Hoje</button>
@@ -1402,7 +1406,7 @@ body::before {
 <!-- ══════════════════════ ADMIN EDIT ══════════════════════ -->
 <div class="screen" id="s-admin-edit">
   <div class="back-header">
-    <button class="back-btn" onclick="goTo('s-dash');dtab('edit')">‹</button>
+    <button class="back-btn" onclick="goTo('s-dash','back');dtab('edit')">‹</button>
     <span class="back-title" id="admin-edit-title"></span>
   </div>
   <div class="edit-inner">
@@ -1571,9 +1575,13 @@ const FB_CFG = {
 
 let db = null;
 const DEFAULT_PIN = '2026';
+const LS_PFX='sjm:';
+const lsGet=k=>localStorage.getItem(LS_PFX+k);
+const lsSet=(k,v)=>localStorage.setItem(LS_PFX+k,v);
+const lsDel=k=>localStorage.removeItem(LS_PFX+k);
 let isAuth = false;
 
-function loadCfg(){ try{ const r=localStorage.getItem('sdr_fb_cfg'); return r?JSON.parse(r):null; }catch{ return null; } }
+function loadCfg(){ try{ const r=lsGet('sdr_fb_cfg'); return r?JSON.parse(r):null; }catch{ return null; } }
 function getPin(){ const c=loadCfg(); return(c&&c.pin)?c.pin:DEFAULT_PIN; }
 
 function initFB(){
@@ -1593,10 +1601,57 @@ window.saveConfig=function(){
     pin:document.getElementById('cfg-pin').value.trim()||DEFAULT_PIN,
   };
   if(!cfg.apiKey||!cfg.projectId){showToast('Preencha API Key e Project ID','err');return;}
-  localStorage.setItem('sdr_fb_cfg',JSON.stringify(cfg));
-  const ok=initFB();
+  lsSet('sdr_fb_cfg',JSON.stringify(cfg));
+  const ok=
+// ── SISTEMA DE SOM ──────────────────────────────
+let _actx = null;
+function _ac(){ if(!_actx)_actx=new(window.AudioContext||window.webkitAudioContext)(); return _actx; }
+function playSound(t){
+  try{
+    const ctx=_ac(), now=ctx.currentTime;
+    const mk=(freq,type,start,dur,vol,freqEnd)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type=type||'sine';o.frequency.setValueAtTime(freq,now+start);
+      if(freqEnd)o.frequency.exponentialRampToValueAtTime(freqEnd,now+start+dur);
+      g.gain.setValueAtTime(0,now+start);
+      g.gain.linearRampToValueAtTime(vol,now+start+0.01);
+      g.gain.exponentialRampToValueAtTime(0.001,now+start+dur);
+      o.start(now+start);o.stop(now+start+dur+0.01);
+    };
+    if(t==='click') mk(600,'sine',0,0.06,0.12,350);
+    if(t==='nav'){mk(250,'sine',0,0.08,0.07,500);mk(500,'sine',0.05,0.12,0.05);}
+    if(t==='back'){mk(450,'sine',0,0.08,0.07,200);}
+    if(t==='tab') mk(520,'sine',0,0.07,0.09,620);
+    if(t==='save'){mk(440,'sine',0,0.22,0.13);mk(660,'sine',0.1,0.25,0.13);mk(880,'sine',0.2,0.3,0.1);}
+    if(t==='error'){mk(200,'sawtooth',0,0.18,0.09,120);}
+    if(t==='month'){mk(380,'sine',0,0.05,0.1,480);mk(560,'sine',0.06,0.1,0.09);}
+  }catch(e){}
+}
+
+function buildMonthPills(){
+  const wrap=document.getElementById('month-pills-wrap');
+  if(!wrap)return;
+  const pills=[];
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const mk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    pills.push({mk,lbl:dashMonthLabel(mk)});
+  }
+  wrap.innerHTML=pills.map(p=>`<div class="mpill${p.mk===dashMKey?' active':''}" onclick="selectDashMonth('${p.mk}')">${p.lbl}</div>`).join('');
+}
+
+window.selectDashMonth=function(mk){
+  dashMKey=mk;
+  playSound('month');
+  buildMonthPills();
+  const active=['hoje','mes','edit'].find(t=>document.getElementById('td-'+t)?.classList.contains('active'))||'mes';
+  dtab(active,true);
+};
+
+initFB();
   const s=document.getElementById('cfg-status');
-  if(ok){s.style.color='var(--green)';s.textContent='✓ Firebase conectado!';showToast('Conectado!','ok');}
+  if(ok){s.style.color='var(--green)';s.textContent='✓ Firebase conectado!';playSound('save');showToast('Conectado!','ok');}
   else{s.style.color='var(--red)';s.textContent='✗ Erro — verifique as credenciais';showToast('Erro','err');}
 };
 
@@ -1625,7 +1680,24 @@ const todayN=now.getDate();
 const mKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 const dInM=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
 const MONTH_SUMMARY_KEY=`summary_${mKey}`;
-let CUR={},vals={},editDay=null,editVals={},adminCtx={};
+let CUR={},vals={},editDay=null,editVals={},adminCtx={},monthCache={};
+let dashMKey=mKey;
+function dashDInM(){const[y,m]=dashMKey.split('-').map(Number);return new Date(y,m,0).getDate();}
+function dashDKey(sdr,day){return`${sdr}_${dashMKey}_${day}`;}
+function dashSKey(sdr){return`${sdr}_summary_${dashMKey}`;}
+async function dbGetDash(sdr,day){
+  if(!db)return null;
+  try{const s=await getDoc(doc(db,'sdr_tracker',dashDKey(sdr,day)));return s.exists()?s.data():null;}catch(e){return null;}
+}
+async function getSummaryDash(sdr){
+  if(!db)return{};
+  try{const s=await getDoc(doc(db,'sdr_summary',dashSKey(sdr)));return s.exists()?s.data():{};}catch(e){return{};}
+}
+function dashMonthLabel(mk){
+  const[y,m]=mk.split('-').map(Number);
+  return new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.','').replace(' ','\u00a0');
+}
+function isCurrentDashMonth(){return dashMKey===mKey;}
 
 // Check Jully hours
 function checkJullyHours(){
@@ -1645,10 +1717,11 @@ function showToast(msg,type=''){
   setTimeout(()=>t.classList.remove('show'),2800);
 }
 
-window.goTo=function(id){
+window.goTo=function(id,snd){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(id==='s-config')fillConfigFields();
+  playSound(snd||'nav');
 };
 
 function dKey(sdr,day){return`${sdr}_${mKey}_${day}`;}
@@ -1658,19 +1731,19 @@ function rgb(c){return c==='v'?'79,142,247':c==='jq'?'16,217,138':'160,96,240';}
 async function dbSet(sdr,day,data,metrics){
   // Salva localStorage imediatamente
   const lk='loc_'+dKey(sdr,day);
-  localStorage.setItem(lk,JSON.stringify(data));
+  lsSet(lk,JSON.stringify(data));
 
   // Atualiza summary local
   const sumKey='loc_'+sKey(sdr);
   let summary={};
-  try{const r=localStorage.getItem(sumKey);if(r)summary=JSON.parse(r);}catch{}
-  const old=JSON.parse(localStorage.getItem(lk+'.old')||'{}');
+  try{const r=lsGet(sumKey);if(r)summary=JSON.parse(r);}catch{}
+  const old=JSON.parse(lsGet(lk+'.old')||'{}');
   metrics.forEach(m=>{
     summary[m.key]=(summary[m.key]||0)-(old[m.key]||0)+(data[m.key]||0);
     if(summary[m.key]<0)summary[m.key]=0;
   });
-  localStorage.setItem(lk+'.old',JSON.stringify(data));
-  localStorage.setItem(sumKey,JSON.stringify(summary));
+  lsSet(lk+'.old',JSON.stringify(data));
+  lsSet(sumKey,JSON.stringify(summary));
 
   // Salva no Firebase
   if(db){
@@ -1695,11 +1768,11 @@ async function dbGet(sdr,day){
       const s=await getDoc(doc(db,'sdr_tracker',dKey(sdr,day)));
       if(s.exists()){
         const d=s.data();
-        localStorage.setItem('loc_'+dKey(sdr,day),JSON.stringify(d));
+        lsSet('loc_'+dKey(sdr,day),JSON.stringify(d));
         return d;
       } else {
         // Documento não existe no Firebase — limpa cache local também
-        localStorage.removeItem('loc_'+dKey(sdr,day));
+        lsDel('loc_'+dKey(sdr,day));
         return null;
       }
     }catch(e){
@@ -1707,7 +1780,7 @@ async function dbGet(sdr,day){
     }
   }
   // Fallback localStorage
-  const r=localStorage.getItem('loc_'+dKey(sdr,day));
+  const r=lsGet('loc_'+dKey(sdr,day));
   return r?JSON.parse(r):null;
 }
 
@@ -1717,12 +1790,12 @@ async function getMonthSummary(sdr){
       const s=await getDoc(doc(db,'sdr_summary',sKey(sdr)));
       if(s.exists()){
         const d=s.data();
-        localStorage.setItem('loc_'+sKey(sdr),JSON.stringify(d));
+        lsSet('loc_'+sKey(sdr),JSON.stringify(d));
         return d;
       }
     }catch(e){ console.warn('Firebase summary error:',e); }
   }
-  const r=localStorage.getItem('loc_'+sKey(sdr));
+  const r=lsGet('loc_'+sKey(sdr));
   return r?JSON.parse(r):{};
 }
 
@@ -1740,7 +1813,7 @@ window.pinKey=async function(k){
   if(pinInput.length===4){
     setTimeout(async()=>{
       if(pinInput===getPin()){
-        isAuth=true;goTo('s-dash');dtab('hoje');resetPin();
+        isAuth=true;playSound('save');goTo('s-dash','nav');dtab('hoje',true);resetPin();
         await loadHomeResumo();
       }else{
         document.querySelectorAll('.pin-dot').forEach(d=>d.classList.add('error'));
@@ -1873,12 +1946,12 @@ window.saveDay=async function(){
   btn.classList.add('loading');btn.innerHTML='<div class="spin"></div>&nbsp;Salvando...';
   await dbSet(CUR.name,todayN,{...vals},CUR.metrics);
   btn.classList.remove('loading');btn.classList.add('saved');btn.textContent='✓ Salvo!';
-  showToast('Dados salvos!','ok');
+  playSound('save');showToast('Dados salvos!','ok');
   if(isAuth)await loadHomeResumo();
   setTimeout(()=>{btn.classList.remove('saved');btn.textContent='Salvar';},3000);
 };
 
-window.tab=function(t){
+window.tab=function(t){playSound('tab');
   ['hoje','mes','hist'].forEach(x=>{
     document.getElementById('t-'+x).classList.toggle('active',x===t);
     document.getElementById('p-'+x).style.display=x===t?'block':'none';
@@ -2046,20 +2119,35 @@ async function renderMes(){
 
 async function renderHist(){
   const c=document.getElementById('p-hist');
-  c.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">Carregando...</div>';
-  const days=[];for(let d=1;d<=dInM;d++){const data=await dbGet(CUR.name,d);if(data)days.push(d);}
-  let h='<div style="height:4px;"></div><div class="sec-lbl">Toque para editar qualquer dia</div><div class="cal-grid">';
-  for(let d=1;d<=dInM;d++){
-    const has=days.includes(d),isT=d===todayN,fut=d>todayN;
-    let cls='day-cell';if(isT)cls+=' today';else if(has)cls+=' has';if(fut)cls+=' future';
-    h+=`<div class="${cls}" ${fut?'':` onclick="openEditDay(${d})"`}>${d}</div>`;
+  // Mostrar calendário vazio imediatamente (sem sumir)
+  const hasCal=c.querySelector('.cal-grid');
+  if(!hasCal){
+    let h='<div style="height:4px;"></div><div class="sec-lbl">Toque para editar qualquer dia</div><div class="cal-grid" id="cal-grid">';
+    for(let d=1;d<=dInM;d++){
+      const isT=d===todayN,fut=d>todayN;
+      let cls='day-cell';if(isT)cls+=' today';if(fut)cls+=' future';
+      h+=`<div class="${cls}" id="dc-${d}" ${fut?'':` onclick="openEditDay(${d})"`}>${d}</div>`;
+    }
+    h+='</div>';c.innerHTML=h;
   }
-  h+='</div>';c.innerHTML=h;
+  // Carregar todos os dias em paralelo
+  const promises=[];for(let d=1;d<=dInM;d++)promises.push(dbGet(CUR.name,d).then(data=>({d,data})));
+  const results=await Promise.all(promises);
+  monthCache={};
+  results.forEach(({d,data})=>{
+    if(data)monthCache[d]=data;
+    const el=document.getElementById('dc-'+d);
+    if(!el)return;
+    const has=!!data,isT=d===todayN,fut=d>todayN;
+    let cls='day-cell';if(isT)cls+=' today';else if(has)cls+=' has';if(fut)cls+=' future';
+    el.className=cls;
+  });
 }
 
-window.openEditDay=async function(day){
+window.openEditDay=function(day){
   editDay=day;
-  const data=await dbGet(CUR.name,day);
+  // Usar cache — abre instantâneo sem nova requisição
+  const data=monthCache[day]||null;
   editVals={};CUR.metrics.forEach(m=>editVals[m.key]=data?(data[m.key]||0):0);
   const isT=day===todayN;
   const lbl=isT?'Hoje':`Dia ${day}/${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -2100,15 +2188,21 @@ window.saveEditDay=async function(){
   const btn=document.getElementById('edit-save-btn');
   btn.classList.add('loading');btn.innerHTML='<div class="spin"></div>&nbsp;Salvando...';
   await dbSet(CUR.name,editDay,{...editVals},CUR.metrics);
+  // Atualizar cache e célula do calendário sem recarregar tudo
+  monthCache[editDay]={...editVals};
+  const cell=document.getElementById('dc-'+editDay);
+  if(cell){const isT=editDay===todayN;cell.className='day-cell'+(isT?' today':' has');}
   btn.classList.remove('loading');btn.classList.add('saved');btn.textContent='✓ Salvo!';
-  showToast('Dados salvos!','ok');
+  playSound('save');showToast('Dados salvos!','ok');
   if(isAuth)await loadHomeResumo();
   setTimeout(()=>{btn.classList.remove('saved');btn.textContent='Salvar alterações';goTo('s-sdr');tab('hist');},2000);
 };
 
 // Dashboard
-window.dtab=function(t){
+window.dtab=function(t,noSound){
   ['hoje','mes','edit'].forEach(x=>document.getElementById('td-'+x).classList.toggle('active',x===t));
+  if(!noSound)playSound('tab');
+  buildMonthPills();
   const c=document.getElementById('dash-content');
   c.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">Carregando...</div>';
   if(t==='hoje')renderDashHoje(c);if(t==='mes')renderDashMes(c);if(t==='edit')renderDashEdit(c);
@@ -2232,17 +2326,16 @@ async function renderDashMes(c){
 
   // Collect all daily data for chart
   const allDaily={};
+  const _dLim=isCurrentDashMonth()?todayN:dashDInM();
   for(const s of SDRS){
-    allDaily[s.name]=[];
-    for(let d=1;d<=todayN;d++){
-      const day=await dbGet(s.name,d);
-      allDaily[s.name].push({d,leads:day?.leads||0,agend:day?.agend||0,comp:day?.comp||0,vend:day?.vend||0});
-    }
+    const proms=[];
+    for(let d=1;d<=_dLim;d++)proms.push(dbGetDash(s.name,d).then(day=>({d,leads:day?.leads||0,agend:day?.agend||0,comp:day?.comp||0,vend:day?.vend||0})));
+    allDaily[s.name]=await Promise.all(proms);
   }
 
   // Grand total month
   const summaries={};
-  for(const s of SDRS) summaries[s.name]=await getMonthSummary(s.name);
+  for(const s of SDRS) summaries[s.name]=await getSummaryDash(s.name);
   const grand={leads:0,agend:0,reag:0,comp:0,vend:0};
   SDRS.forEach(s=>s.metrics.forEach(m=>{grand[m.key]=(grand[m.key]||0)+(summaries[s.name][m.key]||0);}));
 
@@ -2355,10 +2448,11 @@ async function renderDashMes(c){
 async function renderDashEdit(c){
   let h='<div style="height:4px;"></div><div class="sec-lbl">Clique em qualquer dia para corrigir</div>';
   for(const s of SDRS){
-    const days=[];for(let d=1;d<=dInM;d++){const data=await dbGet(s.name,d);if(data)days.push(d);}
-    h+=`<div class="dash-block" style="border-left:3px solid var(--${s.col});margin-bottom:10px;"><div class="dash-hdr" style="margin-bottom:12px;"><div class="avatar" style="width:38px;height:38px;font-size:13px;border-radius:10px;background:rgba(${rgb(s.col)},0.12);color:var(--${s.col});">${s.ini}</div><div class="dname">${s.name}</div></div><div class="cal-grid">`;
-    for(let d=1;d<=dInM;d++){
-      const has=days.includes(d),isT=d===todayN,fut=d>todayN;
+    const _dm=dashDInM();const _isC=isCurrentDashMonth();
+    const _days=await Promise.all(Array.from({length:_dm},(_,i)=>dbGetDash(s.name,i+1).then(data=>data?i+1:null))).then(r=>r.filter(Boolean));
+    h+=`<div class="dash-block" style="border-left:3px solid var(--${s.col});margin-bottom:10px;"><div class="dash-hdr" style="margin-bottom:12px;"><div class="avatar" style="width:38px;height:38px;font-size:13px;border-radius:10px;background:rgba(${rgb(s.col)},0.12);color:var(--${s.col});">${s.ini}</div><div class="dname">${s.name} <span style='font-size:10px;color:var(--muted);'>${dashMonthLabel(dashMKey)}</span></div></div><div class="cal-grid">`;
+    for(let d=1;d<=_dm;d++){
+      const has=_days.includes(d),isT=_isC&&d===todayN,fut=_isC&&d>todayN;
       let cls='day-cell';if(isT)cls+=' today';else if(has)cls+=' has';if(fut)cls+=' future';
       h+=`<div class="${cls}" ${fut?'':` onclick="openAdminEdit('${s.name}','${s.col}',${s.jully},${d})"`}>${d}</div>`;
     }
@@ -2370,9 +2464,9 @@ async function renderDashEdit(c){
 
 window.openAdminEdit=async function(name,col,jully,day){
   const metrics=jully?MJ:MF;
-  const data=await dbGet(name,day);
-  adminCtx={name,col,jully,metrics,day};
-  const lbl=day===todayN?'Hoje':`Dia ${day}/${String(now.getMonth()+1).padStart(2,'0')}`;
+  const data=await dbGetDash(name,day);
+  adminCtx={name,col,jully,metrics,day,mkey:dashMKey};
+  const [_ay,_am]=dashMKey.split('-');const lbl=`Dia ${day}/${_am}/${_ay.slice(2)}`;
   document.getElementById('admin-edit-title').textContent=`${name} · ${lbl}`;
   const c=document.getElementById('admin-edit-fields');c.innerHTML='';
   metrics.forEach(m=>{
@@ -2386,9 +2480,12 @@ window.saveAdminEdit=async function(){
   const btn=document.getElementById('admin-save-btn');
   btn.classList.add('loading');btn.innerHTML='<div class="spin"></div>&nbsp;Salvando...';
   const data={};adminCtx.metrics.forEach(m=>{const el=document.getElementById('ae-'+m.key);data[m.key]=el?Math.max(0,parseInt(el.value)||0):0;});
-  await dbSet(adminCtx.name,adminCtx.day,data,adminCtx.metrics);
+  // Salvar no mês correto (pode ser mês anterior)
+  const _mk=adminCtx.mkey||dashMKey;
+  const _docKey=`${adminCtx.name}_${_mk}_${adminCtx.day}`;
+  if(db)await setDoc(doc(db,'sdr_tracker',_docKey),data,{merge:true});
   btn.classList.remove('loading');btn.classList.add('saved');btn.textContent='✓ Corrigido!';
-  showToast('Dados corrigidos!','ok');
+  playSound('save');showToast('Dados corrigidos!','ok');
   if(isAuth)await loadHomeResumo();
   setTimeout(()=>{btn.classList.remove('saved');btn.style.background='var(--red)';btn.textContent='Salvar correção';goTo('s-dash');dtab('edit');},2000);
 };
@@ -2408,6 +2505,53 @@ document.addEventListener('click', e => {
   el.appendChild(dot);
   setTimeout(() => dot.remove(), 450);
 }, { passive: true });
+
+
+// ── SISTEMA DE SOM ──────────────────────────────
+let _actx = null;
+function _ac(){ if(!_actx)_actx=new(window.AudioContext||window.webkitAudioContext)(); return _actx; }
+function playSound(t){
+  try{
+    const ctx=_ac(), now=ctx.currentTime;
+    const mk=(freq,type,start,dur,vol,freqEnd)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type=type||'sine';o.frequency.setValueAtTime(freq,now+start);
+      if(freqEnd)o.frequency.exponentialRampToValueAtTime(freqEnd,now+start+dur);
+      g.gain.setValueAtTime(0,now+start);
+      g.gain.linearRampToValueAtTime(vol,now+start+0.01);
+      g.gain.exponentialRampToValueAtTime(0.001,now+start+dur);
+      o.start(now+start);o.stop(now+start+dur+0.01);
+    };
+    if(t==='click') mk(600,'sine',0,0.06,0.12,350);
+    if(t==='nav'){mk(250,'sine',0,0.08,0.07,500);mk(500,'sine',0.05,0.12,0.05);}
+    if(t==='back'){mk(450,'sine',0,0.08,0.07,200);}
+    if(t==='tab') mk(520,'sine',0,0.07,0.09,620);
+    if(t==='save'){mk(440,'sine',0,0.22,0.13);mk(660,'sine',0.1,0.25,0.13);mk(880,'sine',0.2,0.3,0.1);}
+    if(t==='error'){mk(200,'sawtooth',0,0.18,0.09,120);}
+    if(t==='month'){mk(380,'sine',0,0.05,0.1,480);mk(560,'sine',0.06,0.1,0.09);}
+  }catch(e){}
+}
+
+function buildMonthPills(){
+  const wrap=document.getElementById('month-pills-wrap');
+  if(!wrap)return;
+  const pills=[];
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const mk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    pills.push({mk,lbl:dashMonthLabel(mk)});
+  }
+  wrap.innerHTML=pills.map(p=>`<div class="mpill${p.mk===dashMKey?' active':''}" onclick="selectDashMonth('${p.mk}')">${p.lbl}</div>`).join('');
+}
+
+window.selectDashMonth=function(mk){
+  dashMKey=mk;
+  playSound('month');
+  buildMonthPills();
+  const active=['hoje','mes','edit'].find(t=>document.getElementById('td-'+t)?.classList.contains('active'))||'mes';
+  dtab(active,true);
+};
 
 initFB();
 
