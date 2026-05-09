@@ -11,7 +11,7 @@
   --bg: #080c14;
   --bg2: #0d1220;
   --bg3: #111827;
-  --card: #131c2e;
+  --card: #131c2e;h
   --card2: #1a2540;
   --border: rgba(255,255,255,0.06);
   --border2: rgba(255,255,255,0.1);
@@ -2533,6 +2533,34 @@ async function loadPublicStatus(){
 // Hook save para atualizar status público
 const _origSaveDay=window.saveDay;
 window.saveDay=async function(){await _origSaveDay();await loadPublicStatus();};
+
+  // ===== FIX: recalcular summary do zero (corrige inflacao por delta bugado) =====
+  async function recalcularSummary(sdrName,mesKey){
+      if(!db)return;
+                                                                    const M=['agend','leads','comp','reag','vend'];
+      const s=Object.fromEntries(M.map(m=>[m,0]));
+      for(let d=1;d<=31;d++){
+            try{const snap=await getDoc(doc(db,'sdr_tracker',sdrName+'_'+mesKey+'_'+d));if(snap.exists())M.forEach(m=>{s[m]+=(snap.data()[m]||0);});}
+            catch(e){}
+      }
+      const sk=sdrName+'_summary_'+mesKey;
+      try{await setDoc(doc(db,'sdr_summary',sk),s);lsSet('loc_'+sk,JSON.stringify(s));lsSet('sjm:loc_'+sdrName+'_summary_'+mesKey,JSON.stringify(s));}catch(e){console.error('recalcSummary',sdrName,e);}
+      return s;
+  }
+  window.recalcularTotais=async function(mes){
+      if(!db){showToast('Firebase nao conectado');return;}
+      if(!mes){const n=new Date();mes=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
+      showToast('Recalculando totais...');
+      for(const s of ['Vanessa','Jaqueline','Jully'])await recalcularSummary(s,mes);
+      showToast('Totais recalculados!');
+      try{await renderMes();}catch(e){}
+      try{await loadHomeResumo();}catch(e){}
+  };
+  const _origSAE=window.saveAdminEdit;
+  window.saveAdminEdit=async function(){
+      await _origSAE.call(this);
+      await window.recalcularTotais();
+  };
 
 loadPublicStatus();
 </script>
