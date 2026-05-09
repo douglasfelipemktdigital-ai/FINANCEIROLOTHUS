@@ -2532,9 +2532,9 @@ async function loadPublicStatus(){
 
 // Hook save para atualizar status público
 const _origSaveDay=window.saveDay;
-window.saveDay=async function(){await _origSaveDay();await loadPublicStatus();};
 
-  // ===== FIX: recalcular summary do zero (corrige inflacao por delta bugado) =====
+  const _origSaveEditDay=window.saveEditDay;window.saveEditDay=async function(){await _origSaveEditDay.call(this);if(window.CUR&&CUR.name&&db){const _n=new Date();await recalcularSummary(CUR.name,_n.getFullYear()+'-'+String(_n.getMonth()+1).padStart(2,'0'));}};
+  window.saveDay=async function(){await _origSaveDay();await loadPublicStatus();if(window.CUR&&CUR.name&&db){const _n=new Date();await recalcularSummary(CUR.name,_n.getFullYear()+'-'+String(_n.getMonth()+1).padStart(2,'0'));}};
   async function recalcularSummary(sdrName,mesKey){
       if(!db)return;
                                                                     const M=['agend','leads','comp','reag','vend'];
