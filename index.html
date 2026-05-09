@@ -1647,7 +1647,12 @@ async function dbGetDash(sdr,day){
 }
 async function getSummaryDash(sdr){
   if(!db)return{};
-  try{const s=await getDoc(doc(db,'sdr_summary',dashSKey(sdr)));return s.exists()?s.data():{};}catch(e){return{};}
+    const M=['agend','leads','comp','reag','vend'];
+    const s=Object.fromEntries(M.map(m=>[m,0]));
+    for(let d=1;d<=31;d++){
+          try{const snap=await getDoc(doc(db,'sdr_tracker',dashDKey(sdr,d)));if(snap.exists())M.forEach(m=>{s[m]+=(snap.data()[m]||0);});}catch(e){}
+    }
+    return s;
 }
 function buildMonthPills(){
   const wrap=document.getElementById('month-pills-wrap');if(!wrap)return;
