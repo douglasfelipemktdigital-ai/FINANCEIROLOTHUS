@@ -2564,6 +2564,7 @@ window.saveDay=async function(){
       }
   };
   async function recalcularSummary(sdrName,mesKey){
+      return; // DESATIVADO: estava sobrescrevendo sdr_summary com soma incompleta do tracker
       if(!db)return;
                                                                     const M=['agend','leads','comp','reag','vend'];
       const s=Object.fromEntries(M.map(m=>[m,0]));
