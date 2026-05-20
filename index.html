@@ -1647,12 +1647,16 @@ async function dbGetDash(sdr,day){
 }
 async function getSummaryDash(sdr){
   if(!db)return{};
-    const M=['agend','leads','comp','reag','vend'];
-    const s=Object.fromEntries(M.map(m=>[m,0]));
-    for(let d=1;d<=31;d++){
-          try{const snap=await getDoc(doc(db,'sdr_tracker',dashDKey(sdr,d)));if(snap.exists())M.forEach(m=>{s[m]+=(snap.data()[m]||0);});}catch(e){}
+  const M=['agend','leads','comp','reag','vend'];
+  const s=Object.fromEntries(M.map(m=>[m,0]));
+  try{
+    const snap=await getDoc(doc(db,'sdr_summary',sKey(sdr)));
+    if(snap.exists()){
+      const d=snap.data();
+      M.forEach(m=>{ s[m]=(d[m]||0); });
     }
-    return s;
+  }catch(e){ console.warn('getSummaryDash: erro lendo sdr_summary', e); }
+  return s;
 }
 function buildMonthPills(){
   const wrap=document.getElementById('month-pills-wrap');if(!wrap)return;
