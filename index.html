@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -290,14 +289,126 @@ select.sel{background:rgba(255,255,255,.04);border:1px solid var(--b1);color:var
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
 
-@media(max-width:900px){
+/* ── MOBILE BOTTOM NAV ──────────────────────────── */
+.bottom-nav{display:none}
+
+/* ── TABLET ─────────────────────────────────────── */
+@media(max-width:960px){
   .g2.main,.g2.half{grid-template-columns:1fr}
   .wrap{padding:14px 16px}
   .topbar,.tabs{padding:0 16px}
   .fg{grid-template-columns:1fr}
   .fi.f{grid-column:span 1}
   .kpi-row{grid-template-columns:repeat(2,1fr)}
-  .tr .tdate,.tr .tadm{display:none}
+  .tr .tdate{display:none}
+  .notif-panel{width:320px}
+}
+
+/* ── SMARTPHONE ──────────────────────────────────── */
+@media(max-width:600px){
+  .topbar{height:56px;padding:0 14px}
+  .tbrand-agency{display:none}
+  .tbrand-title{font-size:15px}
+  .tlive{display:none}
+  .tr .tdate,.tr .tadm,.btn-sair{display:none}
+  .btn-add{padding:7px 12px;font-size:12px}
+  .tlogo{width:30px;height:30px}
+
+  /* Tabs somem no topo — usa bottom nav */
+  .tabs{display:none}
+
+  /* Bottom nav fixo tipo app */
+  .bottom-nav{
+    display:flex;position:fixed;
+    bottom:0;left:0;right:0;
+    background:rgba(12,11,28,.97);
+    border-top:1px solid var(--b2);
+    z-index:300;backdrop-filter:blur(20px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .bn-item{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:3px;padding:10px 0 8px;color:var(--t3);
+    cursor:pointer;transition:color .15s;
+    font-size:9px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.8px;
+    -webkit-tap-highlight-color:transparent;
+    border:none;background:none;
+  }
+  .bn-item svg{width:22px;height:22px;stroke-width:1.8;stroke:currentColor;fill:none}
+  .bn-item.on{color:var(--red)}
+  .bn-dot{width:4px;height:4px;border-radius:50%;background:var(--red);display:none}
+  .bn-item.on .bn-dot{display:block}
+
+  #app{padding-bottom:72px}
+  .wrap{padding:12px 12px 16px}
+
+  /* KPIs 2 colunas compactas */
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+  .kpi{padding:13px 14px}
+  .kpi-val{font-size:20px}
+  .kpi-lbl{font-size:9px;margin-bottom:7px}
+  .kpi-sub{font-size:10px}
+
+  /* Grids todos em 1 coluna */
+  .g2.main,.g2.half,.g2.one{grid-template-columns:1fr;gap:12px}
+
+  /* Charts menores */
+  .cb{padding:12px}
+
+  /* Tabelas com scroll horizontal */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:500px}
+  thead th{padding:8px 10px;font-size:10px}
+  td{padding:10px;font-size:13px}
+
+  /* Modal sobe de baixo (sheet) */
+  .mbg{align-items:flex-end}
+  .modal{
+    width:100%;max-width:100%;
+    border-radius:var(--rxl) var(--rxl) 0 0;
+    max-height:93vh;
+  }
+  .mh{padding:16px 20px}
+  .mb{padding:18px 20px}
+  .mf{padding:14px 20px}
+  .fg{grid-template-columns:1fr;gap:12px}
+  .finp{padding:14px;font-size:16px} /* evita zoom iOS */
+
+  /* Notif panel sobe sobre o bottom nav */
+  .notif-panel{
+    position:fixed;bottom:78px;
+    left:10px;right:10px;width:auto;
+    max-height:65vh;overflow-y:auto;
+    border-radius:var(--rl);
+  }
+
+  /* Banner cobrança */
+  .cobranca-banner{padding:10px 12px}
+  .cobranca-item{flex-direction:column;align-items:flex-start;gap:5px;padding:8px 10px}
+  .cobranca-item-info{width:100%;justify-content:space-between}
+
+  /* Login */
+  .login-wrap{width:100%;padding:0 16px}
+  .lcard{padding:22px 18px;border-radius:var(--rl)}
+  .linp{font-size:16px;padding:14px} /* evita zoom iOS */
+  .lbtn{padding:15px;font-size:15px}
+  .brand-name{font-size:22px}
+  .lotus-wrap{width:66px;height:66px}
+  .lotus-wrap svg{width:66px;height:66px}
+
+  /* Planos */
+  .pg-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .pc{padding:12px 14px}
+  .pc-val{font-size:18px}
+
+  /* Upcoming */
+  .ui{padding:10px 14px}
+  .ui-name{font-size:13px}
+
+  /* Alert bar */
+  .alert{font-size:12px;padding:10px 12px}
 }
 </style>
 </head>
@@ -517,6 +628,38 @@ select.sel{background:rgba(255,255,255,.04);border:1px solid var(--b1);color:var
 </div></div>
 
 </div><!-- /app -->
+
+<!-- BOTTOM NAV MOBILE -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bn-item on" id="bn-dashboard" onclick="showPgMobile('dashboard',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+    <div class="bn-dot"></div>
+  </button>
+  <button class="bn-item" id="bn-clientes" onclick="showPgMobile('clientes',this)">
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Clientes
+    <div class="bn-dot"></div>
+  </button>
+  <button class="bn-item" id="bn-recebimentos" onclick="showPgMobile('recebimentos',this)">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Cobranças
+    <div class="bn-dot"></div>
+  </button>
+  <button class="bn-item" id="bn-previsao" onclick="showPgMobile('previsao',this)">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Previsão
+    <div class="bn-dot"></div>
+  </button>
+  <button class="bn-item" id="bn-notif" onclick="toggleNotif()">
+    <div style="position:relative;display:inline-flex">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="bell-badge" id="bellBadgeMobile" style="display:none;position:absolute;top:-6px;right:-8px"></span>
+    </div>
+    Alertas
+    <div class="bn-dot"></div>
+  </button>
+</nav>
 
 <!-- MODAL CLIENTE -->
 <div class="mbg" id="mCli">
@@ -1119,10 +1262,18 @@ function renderNotificacoes() {
     badge.style.display = 'flex';
     badge.textContent = alertas.length > 9 ? '9+' : alertas.length;
     notifSub.textContent = alertas.length + ' pendente' + (alertas.length !== 1 ? 's' : '');
+    // mobile badge
+    const mb = document.getElementById('bellBadgeMobile');
+    if(mb){mb.style.display='flex';mb.textContent=alertas.length>9?'9+':alertas.length;}
+    // bottom nav alertas ativo
+    const bnNotif=document.getElementById('bn-notif');
+    if(bnNotif) bnNotif.classList.add('has-alerts');
   } else {
     bell.classList.remove('has-alerts');
     badge.style.display = 'none';
     notifSub.textContent = 'Tudo em dia ✓';
+    const mb=document.getElementById('bellBadgeMobile');
+    if(mb) mb.style.display='none';
   }
 
   if (!alertas.length) {
@@ -1189,6 +1340,24 @@ document.addEventListener('click', e => {
     panel.style.display = 'none';
   }
 });
+
+// ── MOBILE NAV ────────────────────────────────────────────────────
+function showPgMobile(p, el) {
+  // mesma lógica do showPg mas atualiza bottom nav
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.bn-item').forEach(x=>x.classList.remove('on'));
+  document.getElementById('pg-'+p).classList.add('on');
+  if(el) el.classList.add('on');
+  // sincroniza tab do topo também
+  document.querySelectorAll('.tab').forEach(t => {
+    if(t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+p+"'")) t.classList.add('on');
+  });
+  if(p==='dashboard') renderDashboard();
+  if(p==='clientes') renderCli();
+  if(p==='recebimentos') renderRec();
+  if(p==='previsao') renderPrevisao();
+}
 
 // ── PAGES ─────────────────────────────────────────────────────────
 function showPg(p,el){
