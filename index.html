@@ -561,6 +561,62 @@ select.sel{background:rgba(255,255,255,.04);border:1px solid var(--b1);color:var
 </div>
 
 <script>
+// ── SISTEMA DE SONS ───────────────────────────────────────────────
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  const ctx = AC;
+  if (ctx.state === 'suspended') ctx.resume();
+
+  if (type === 'login') {
+    // Acorde suave ascendente — elegante, tipo "boas-vindas"
+    [[440,0],[554,0.12],[659,0.24],[880,0.36]].forEach(([freq, delay]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.value = freq;
+      const t = ctx.currentTime + delay;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.18, t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.start(t); o.stop(t + 0.36);
+    });
+  }
+
+  if (type === 'alert') {
+    // Dois bipes urgentes — "atenção!"
+    [[520,0],[520,0.22]].forEach(([freq, delay]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'square';
+      o.frequency.value = freq;
+      const t = ctx.currentTime + delay;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.09, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      o.start(t); o.stop(t + 0.19);
+    });
+  }
+
+  if (type === 'notify') {
+    // Dois tons descendentes suaves — "nova notificação"
+    [[880,0],[660,0.15]].forEach(([freq, delay]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.value = freq;
+      const t = ctx.currentTime + delay;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.15, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      o.start(t); o.stop(t + 0.29);
+    });
+  }
+}
+
 // ── AUTH ──────────────────────────────────────────────────────────
 const PWD = btoa('Lothu$1234');
 function doLogin(){
@@ -568,6 +624,7 @@ function doLogin(){
   const err = document.getElementById('lerr');
   const card = document.querySelector('.lcard');
   if(btoa(v)===PWD){
+    playSound('login');
     const ls=document.getElementById('login');
     ls.style.opacity='0';
     setTimeout(()=>{ls.style.display='none';document.getElementById('app').classList.add('on');sessionStorage.setItem('la','1');initApp();},450);
@@ -1098,7 +1155,11 @@ function renderCobrancaBanner() {
 
   if (!alertas.length) { banner.classList.remove('on'); return; }
 
+  // Som de alerta só se o banner estava fechado (primeira vez)
+  const eraFechado = !banner.classList.contains('on');
   banner.classList.add('on');
+  if (eraFechado) playSound('alert');
+
   list.innerHTML = alertas.map(a => `
     <div class="cobranca-item">
       <span class="cobranca-item-name">${a.cliente.nome}</span>
@@ -1113,7 +1174,11 @@ function toggleNotif() {
   const panel = document.getElementById('notifPanel');
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) renderNotificacoes();
+  if (!isOpen) {
+    renderNotificacoes();
+    const alertas = getAlertasCobranca();
+    if (alertas.length > 0) playSound('notify');
+  }
 }
 
 // Fecha painel ao clicar fora
