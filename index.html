@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -530,10 +531,7 @@ select.sel{background:rgba(255,255,255,.04);border:1px solid var(--b1);color:var
         <select class="finp" id="f_plano"><option>Mensal</option><option>Trimestral</option><option>Semestral</option><option>Anual</option></select></div>
       <div class="fi"><label class="fl">Valor (R$)</label><input class="finp" type="number" id="f_valor" placeholder="0,00" step="0.01"></div>
       <div class="fi"><label class="fl">Dia de Vencimento</label>
-        <select class="finp" id="f_dia">
-          <option value="1">Dia 1</option><option value="5">Dia 5</option><option value="10">Dia 10</option>
-          <option value="15">Dia 15</option><option value="20">Dia 20</option><option value="25">Dia 25</option><option value="28">Dia 28</option>
-        </select></div>
+        <input class="finp" type="number" id="f_dia" min="1" max="31" placeholder="Ex: 3, 10, 15..." style="appearance:none"></div>
       <div class="fi"><label class="fl">Data de Início</label><input class="finp" type="date" id="f_inicio"></div>
       <div class="fi"><label class="fl">Status</label><select class="finp" id="f_status"><option>Ativo</option><option>Inativo</option></select></div>
       <div class="fi f"><label class="fl">Observações</label><textarea class="finp" id="f_obs" rows="2" placeholder="Notas internas..."></textarea></div>
@@ -919,6 +917,8 @@ function closeCli(){document.getElementById('mCli').classList.remove('on');eid=n
 async function saveCli(){
   const nome=document.getElementById('f_nome').value.trim();
   if(!nome){alert('Informe o nome');return;}
+  const dia=parseInt(document.getElementById('f_dia').value);
+  if(!dia||dia<1||dia>31){alert('Informe um dia de vencimento válido (1 a 31)');return;}
   await waitFirebase();
   const data={nome,email:document.getElementById('f_email').value.trim(),tel:document.getElementById('f_tel').value.trim(),
     plano:document.getElementById('f_plano').value,valor:parseFloat(document.getElementById('f_valor').value)||0,
